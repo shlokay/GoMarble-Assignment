@@ -43,8 +43,7 @@ Client ----> Flask API ----> Selenium Web Scraping (Edge WebDriver)
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/web-scraping-review-extraction-flask.git
-   cd web-scraping-review-extraction-flask
+   git clone https://github.com/shokay/GoMarble-Assignment
     ```
 2. Create and activate a virtual environment:
    ```bash
