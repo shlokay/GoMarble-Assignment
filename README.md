@@ -1,32 +1,53 @@
-# Webpage Review Scraper with Azure OpenAI Integration
+# Web Scraping and Review Extraction API using Flask, Selenium, and Azure OpenAI
 
-This project is a Python-based web scraper that extracts review information from product pages, processes the content using OpenAI's Azure API, and returns the reviews in structured JSON format. The project leverages Selenium for fetching the web content, BeautifulSoup for cleaning up the HTML, and Azure OpenAI for parsing and structuring the data.
+This project provides an API built using Flask that scrapes product reviews from a given URL, processes the HTML content with Selenium, and extracts structured review information using Azure OpenAI services. The API returns JSON responses containing review titles, body, ratings, and reviewer names.
 
-## Features
+## Solution Approach
 
-- **Scraping Reviews:** Automatically scrape reviews from a given URL using Selenium Edge WebDriver.
-- **HTML Parsing:** Clean up unnecessary HTML elements (like scripts, headers, and footers) using BeautifulSoup.
-- **Conversion to Markdown:** Convert cleaned HTML content to Markdown format for readability.
-- **Chunked Processing:** Break down large HTML content into manageable parts for efficient processing.
-- **Azure OpenAI Integration:** Use Azure's OpenAI API to transform unstructured review content into a structured JSON format.
+### 1. Web Scraping with Selenium
+   - Selenium is used to load and scrape HTML content from the webpage. The Edge WebDriver runs in headless mode, fetching the entire page, including dynamic content like reviews.
+   - After loading, the script scrolls to the bottom to ensure all content is loaded before extracting the HTML.
 
-## Prerequisites
+### 2. HTML Cleaning and Parsing
+   - Using BeautifulSoup, the raw HTML is cleaned by removing unnecessary tags such as `<script>`, `<style>`, `<header>`, and `<footer>`.
+   - The cleaned HTML is then converted to Markdown format using `html2text` to improve readability and simplify processing for the AI.
 
-- **Python 3.7+**
-- **Selenium WebDriver for Microsoft Edge**
-- **Azure OpenAI Account**
+### 3. Processing with Azure OpenAI
+   - The cleaned HTML is split into smaller chunks if too large, and these chunks are sent to Azure OpenAI for review extraction.
+   - Azure OpenAI processes the content and returns structured review data in JSON format, containing the review title, body, rating, and reviewer name.
 
-### Libraries
+### 4. API Endpoint
+   - The API exposes the `/api/fetch-reviews` endpoint where users can input a URL to retrieve structured review data.
 
-- `selenium` - For automated browser control.
-- `beautifulsoup4` - For HTML parsing and cleaning.
-- `html2text` - For converting HTML to Markdown.
-- `openai` - To interface with Azure OpenAI API.
+---
 
-## Installation
+## System Architecture
 
-1. Clone the repository:
+Here is the high-level architecture illustrating the key components and interactions:
 
-```bash
-git clone https://github.com/your-username/repo-name.git
-cd repo-name
+```plaintext
+Client ----> Flask API ----> Selenium Web Scraping (Edge WebDriver)
+      \                               |
+       \-> Azure OpenAI Service <------|
+```
+
+## How to Run the Project
+
+### Prerequisites
+- Python 3.x installed
+- Flask and required dependencies (`Flask`, `beautifulsoup4`, `html2text`, `selenium`)
+- Microsoft Edge browser and Edge WebDriver installed
+- An Azure OpenAI account with API key and access
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/web-scraping-review-extraction-flask.git
+   cd web-scraping-review-extraction-flask
+    ```
+2. Create and activate a virtual environment:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+   ```
