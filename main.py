@@ -1,5 +1,7 @@
 import os
 import time
+import json
+from flask import Flask, jsonify, request
 from bs4 import BeautifulSoup
 import html2text
 from selenium import webdriver
@@ -7,10 +9,12 @@ from selenium.webdriver.edge.service import Service
 from selenium.webdriver.edge.options import Options
 from openai import AzureOpenAI
 
-# Driver path for Edge WebDriver
+app = Flask(__name__)
+
+# Path to your msedgedriver
 EDGE_DRIVER_PATH = './msedgedriver.exe'
 
-# Azure OpenAI credentials fetched from environment variables
+# Azure OpenAI configuration from environment variables
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
 DEPLOYMENT_NAME = os.getenv("DEPLOYMENT_NAME")
@@ -24,73 +28,108 @@ client = AzureOpenAI(
     api_version=API_VERSION,
 )
 
-# Function to configure and initialize the Selenium Edge WebDriver
 def init_selenium():
-    edge_options = Options()
-    edge_options.add_argument("--disable-gpu")
-    edge_options.add_argument("--disable-dev-shm-usage")
-    edge_options.add_argument("--window-size=1920,1080")
-    edge_options.add_argument("--inprivate")
-    edge_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-
-    edge_service = Service(executable_path=EDGE_DRIVER_PATH)
-    driver = webdriver.Edge(service=edge_service, options=edge_options)
+    """Initialize and return Selenium WebDriver for Microsoft Edge."""
+    options = Options()
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--headless")
+    options.add_argument("--inprivate")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    
+    service = Service(EDGE_DRIVER_PATH)
+    driver = webdriver.Edge(service=service, options=options)
     return driver
 
-# Function to retrieve the webpage's HTML content using Selenium
-def get_page_html(url):
+def retrieve_html(url):
+    """Fetch HTML content from the URL using Selenium."""
     driver = init_selenium()
     try:
         driver.get(url)
-        time.sleep(1)  # Wait for the page to load fully
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")  # Scroll down the page
-        html_content = driver.page_source
-        return html_content
+        time.sleep(1)  # Simulate time for page load
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        page_source = driver.page_source
+        return page_source
     finally:
         driver.quit()
 
-# Clean the HTML by removing unnecessary tags like scripts, styles, etc.
-def remove_extra_html_tags(html):
-    soup = BeautifulSoup(html, 'html.parser')
-    for unwanted_tag in soup.find_all(['header', 'footer', 'script', 'style']):
-        unwanted_tag.extract()
+def clean_html_content(raw_html):
+    """Clean the HTML content by removing unnecessary tags like script, style, header."""
+    soup = BeautifulSoup(raw_html, 'html.parser')
+    for tag in soup(['header', 'footer', 'script', 'style']):
+        tag.extract()
     return str(soup)
 
-# Convert HTML content to markdown, ensuring readability
-def convert_html_to_markdown(html):
-    cleaned_html = remove_extra_html_tags(html)
-    markdown_parser = html2text.HTML2Text()
-    markdown_parser.ignore_links = False
-    return markdown_parser.handle(cleaned_html)
+def convert_html_to_markdown(filtered_html):
+    """Convert cleaned HTML to Markdown."""
+    markdown_converter = html2text.HTML2Text()
+    markdown_converter.ignore_links = False
+    return markdown_converter.handle(filtered_html)
 
-# Split large DOM content into manageable chunks for processing
-def break_up_dom(dom_content, chunk_size=6000):
-    return [dom_content[i:i + chunk_size] for i in range(0, len(dom_content), chunk_size)]
+def split_content_for_processing(content, chunk_size=6000):
+    """Split content into chunks for OpenAI processing."""
+    return [content[i:i + chunk_size] for i in range(0, len(content), chunk_size)]
 
-# Example flow: Fetch and process the HTML content, convert it, and send parts for OpenAI processing
-html_data = get_page_html('https://www.amazon.in/HP-Black-Original-Ink-Cartridge/product-reviews/B09JT29NYS/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews')
-markdown_data = convert_html_to_markdown(html_data)
-dom_chunks = break_up_dom(markdown_data)
+@app.route("/api/fetch-reviews", methods=["GET"])
+def fetch_reviews():
+    """API endpoint to fetch and return review information from a given URL."""
+    try:
+        url = request.args.get('url')
+        if not url:
+            return jsonify({"error": "URL parameter is missing"}), 400
+        
+        # Retrieve HTML content from the URL
+        html_content = retrieve_html(url)
+        markdown_content = convert_html_to_markdown(clean_html_content(html_content))
+        content_chunks = split_content_for_processing(markdown_content)
 
-# Send each chunk to OpenAI and retrieve structured review content
-for chunk in dom_chunks:
-    response = client.chat.completions.create(
-        model=DEPLOYMENT_NAME,
-        messages=[
-            {"role": "system", "content": '''You are an assistant that extracts review information from a webpage. The information provided is in HTML format. Return the reviews in a JSON format like this:
-            "reviews": [{
-                "title": "Review Title",
-                "body": "Review body text",
-                "rating": 5,
-                "reviewer": "Reviewer Name"
-            },
-            ].'''},
-            {"role": "user", "content": chunk},
-        ],
-        max_tokens=MAX_TOKENS,
-        temperature=0.0,
-        top_p=0.95,
-        stream=False
-    )
-    output = response.choices[0].message.content
-    print(output)
+        all_reviews = []
+
+        for chunk in content_chunks:
+            response = client.chat.completions.create(
+                model=DEPLOYMENT_NAME,
+                messages=[
+                    {"role": "system", "content": '''You are a helpful assistant that extracts review details from web content.
+                    Format the reviews like this:
+                    {
+                        "reviews": [
+                            {
+                                "title": "Review Title",
+                                "body": "Review content",
+                                "rating": 5,
+                                "reviewer": "Reviewer Name"
+                            }
+                        ]
+                    }.'''},
+                    {"role": "user", "content": chunk}
+                ],
+                max_tokens=MAX_TOKENS,
+                temperature=0.0,
+                top_p=0.95,
+                stream=False
+            )
+
+            content = response.choices[0].message.content.strip()
+
+            # Remove code block format if present
+            if content.startswith("```json") and content.endswith("```"):
+                content = content[7:-3].strip()
+
+            try:
+                reviews_data = json.loads(content)
+                all_reviews.extend(reviews_data.get("reviews", []))
+            except json.JSONDecodeError:
+                print("Error parsing JSON:", content)
+
+        # Return reviews as a JSON response
+        return jsonify({
+            "total_reviews": len(all_reviews),
+            "reviews": all_reviews
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
