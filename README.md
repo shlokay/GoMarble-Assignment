@@ -58,5 +58,7 @@ Client ----> Flask API ----> Selenium Web Scraping (Edge WebDriver)
    ```
 ### Screenshots:
 
-![result op](https://github.com/user-attachments/assets/b645e307-e19e-4ed8-9090-cc2aabc186b2)
+Input page:
 ![input img](https://github.com/user-attachments/assets/e85b7f6f-27ed-455f-8200-531012354f78)
+Result page:
+![result op](https://github.com/user-attachments/assets/b645e307-e19e-4ed8-9090-cc2aabc186b2)
