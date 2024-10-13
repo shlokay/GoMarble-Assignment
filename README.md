@@ -52,3 +52,7 @@ Client ----> Flask API ----> Selenium Web Scraping (Edge WebDriver)
    ```
 3. Place the home.html in the templates folder
 4. Place the styles.css in the static folder
+5. Run the python file using the command:
+   ```bash
+   python main.py
+   ```
