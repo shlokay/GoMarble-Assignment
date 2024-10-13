@@ -62,3 +62,5 @@ Input page:
 ![input img](https://github.com/user-attachments/assets/e85b7f6f-27ed-455f-8200-531012354f78)
 Result page:
 ![result op](https://github.com/user-attachments/assets/b645e307-e19e-4ed8-9090-cc2aabc186b2)
+![res2 op](https://github.com/user-attachments/assets/0079e951-9f23-4188-92dd-9a6d737b20a6)
+
