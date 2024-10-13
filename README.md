@@ -50,3 +50,5 @@ Client ----> Flask API ----> Selenium Web Scraping (Edge WebDriver)
    python3 -m venv venv
    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
    ```
+3. Place the home.html in the templates folder
+4. Place the styles.css in the static folder
