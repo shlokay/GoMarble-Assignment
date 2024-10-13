@@ -1,7 +1,7 @@
 import os
 import time
 import json
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from bs4 import BeautifulSoup
 import html2text
 from selenium import webdriver
@@ -14,12 +14,12 @@ app = Flask(__name__)
 # Path to your msedgedriver
 EDGE_DRIVER_PATH = './msedgedriver.exe'
 
-# Azure OpenAI configuration from environment variables
+# Azure OpenAI configuration
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
 DEPLOYMENT_NAME = os.getenv("DEPLOYMENT_NAME")
 API_VERSION = os.getenv("API_VERSION")
-MAX_TOKENS = int(os.getenv("MAX_TOKENS", 800))
+MAX_TOKENS = int(os.getenv("MAX_TOKENS", 600))
 
 # Initialize Azure OpenAI client
 client = AzureOpenAI(
@@ -71,11 +71,16 @@ def split_content_for_processing(content, chunk_size=6000):
     """Split content into chunks for OpenAI processing."""
     return [content[i:i + chunk_size] for i in range(0, len(content), chunk_size)]
 
-@app.route("/api/fetch-reviews", methods=["GET"])
-def fetch_reviews():
-    """API endpoint to fetch and return review information from a given URL."""
+@app.route("/")
+def home():
+    """Render the home page."""
+    return render_template("home.html")
+
+@app.route("/api/reviews", methods=["GET"])
+def show_results():
+    """Fetch and display review information from a given URL."""
     try:
-        url = request.args.get('url')
+        url = request.args.get('page')  # Change to get the 'page' parameter from URL
         if not url:
             return jsonify({"error": "URL parameter is missing"}), 400
         
@@ -89,8 +94,7 @@ def fetch_reviews():
         for chunk in content_chunks:
             response = client.chat.completions.create(
                 model=DEPLOYMENT_NAME,
-                messages=[
-                    {"role": "system", "content": '''You are a helpful assistant that extracts review details from web content.
+                messages=[{"role": "system", "content": '''You are a helpful assistant that extracts review details from web content.
                     Format the reviews like this:
                     {
                         "reviews": [
@@ -122,14 +126,17 @@ def fetch_reviews():
             except json.JSONDecodeError:
                 print("Error parsing JSON:", content)
 
-        # Return reviews as a JSON response
-        return jsonify({
-            "total_reviews": len(all_reviews),
+        # Prepare the response in the desired JSON format
+        response_data = {
+            "reviews_count": len(all_reviews),
             "reviews": all_reviews
-        })
+        }
+
+        return jsonify(response_data)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
