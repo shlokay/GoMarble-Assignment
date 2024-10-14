@@ -7,7 +7,7 @@ import html2text
 from selenium import webdriver
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.edge.options import Options
-from openai import AzureOpenAI
+from openai import AzureOpenAI 
 
 app = Flask(__name__)
 
@@ -15,8 +15,8 @@ app = Flask(__name__)
 EDGE_DRIVER_PATH = './msedgedriver.exe'
 
 # Azure OpenAI configuration
-AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
-AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+OPENAI_ENDPOINT = os.getenv("OPENAI_ENDPOINT")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 DEPLOYMENT_NAME = os.getenv("DEPLOYMENT_NAME")
 API_VERSION = os.getenv("API_VERSION")
 MAX_TOKENS = int(os.getenv("MAX_TOKENS", 600))
