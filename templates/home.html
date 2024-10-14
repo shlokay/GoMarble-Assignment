@@ -5,16 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Review Extractor</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        function showLoadingMessage() {
+            // Show the loading message
+            document.getElementById('loading-message').style.display = 'block';
+        }
+
+        function hideInputForm() {
+            // Hide the input form container
+            document.getElementById('input-container').style.display = 'none';
+        }
+    </script>
 </head>
 <body>
     <div class="container">
-        <h1>Review Extractor</h1>
-        <form action="/api/reviews" method="GET">
-            <label for="url">Enter the URL of the product page:</label>
-            <input type="url" id="url" name="page" required placeholder="Enter URL here"> <!-- Changed name to 'page' -->
-            <button type="submit">Fetch Reviews</button>
-        </form>
-        
+        <!-- Input container for the URL form -->
+        <div id="input-container">
+            <h1>Review Extractor</h1>
+            <form action="/api/reviews" method="GET" onsubmit="showLoadingMessage()">
+                <label for="url">Enter the URL of the product page:</label>
+                <input type="url" id="url" name="page" required placeholder="Enter URL here">
+                <button type="submit">Fetch Reviews</button>
+            </form>
+            
+            <!-- Loading message -->
+            <div id="loading-message" style="display: none; margin-top: 10px;">
+                <p>Please wait while we fetch the reviews...</p>
+            </div>
+        </div>
+
+        <!-- Table to display reviews -->
+        <div id="reviews-table" style="display: none; margin-top: 20px;">
+            <h2>Reviews</h2>
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Body</th>
+                        <th>Rating</th>
+                        <th>Reviewer</th>
+                    </tr>
+                </thead>
+                <tbody id="reviews-body">
+                    <!-- Reviews will be inserted here dynamically -->
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    <script>
+        // Optional: Add a function to handle displaying reviews in a table format
+        function displayReviews(reviews) {
+            const reviewsBody = document.getElementById('reviews-body');
+            reviewsBody.innerHTML = ''; // Clear existing reviews
+
+            reviews.forEach(review => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${review.title}</td>
+                    <td>${review.body}</td>
+                    <td>${review.rating}</td>
+                    <td>${review.reviewer}</td>
+                `;
+                reviewsBody.appendChild(row);
+            });
+
+            document.getElementById('reviews-table').style.display = 'block'; // Show the reviews table
+        }
+
+        // Fetch reviews using AJAX to avoid page reload
+        document.querySelector('form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const url = document.getElementById('url').value;
+            showLoadingMessage(); // Show loading message
+
+            // Fetch the reviews
+            fetch(`/api/reviews?page=${encodeURIComponent(url)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.reviews) {
+                        hideInputForm(); // Hide the input form after fetching reviews
+                        displayReviews(data.reviews); // Display reviews in table format
+                    } else {
+                        // Handle error or no reviews case
+                        alert('No reviews found or an error occurred.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching reviews:', error);
+                    alert('An error occurred while fetching reviews.');
+                });
+        });
+    </script>
 </body>
 </html>
