@@ -21,6 +21,8 @@ DEPLOYMENT_NAME = os.getenv("DEPLOYMENT_NAME")
 API_VERSION = os.getenv("API_VERSION")
 MAX_TOKENS = int(os.getenv("MAX_TOKENS", 600))
 
+
+
 # Initialize Azure OpenAI client
 client = AzureOpenAI(
     azure_endpoint=AZURE_OPENAI_ENDPOINT,
@@ -80,7 +82,7 @@ def home():
 def show_results():
     """Fetch and display review information from a given URL."""
     try:
-        url = request.args.get('page')  # Change to get the 'page' parameter from URL
+        url = request.args.get('page')
         if not url:
             return jsonify({"error": "URL parameter is missing"}), 400
         
@@ -139,4 +141,3 @@ def show_results():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
