@@ -54,13 +54,16 @@ Client ----> Flask API ----> Selenium Web Scraping (Edge WebDriver)
 4. Place the styles.css in the static folder
 5. Run the python file using the command:
    ```bash
-   python main.py
+   python app.py
    ```
 ### Screenshots:
 
 Input page:
-![input img](https://github.com/user-attachments/assets/e85b7f6f-27ed-455f-8200-531012354f78)
+![input ](https://github.com/user-attachments/assets/861b994c-da54-4c41-a2a4-9134a89ebc35)
+
 Result page:
-![result op](https://github.com/user-attachments/assets/b645e307-e19e-4ed8-9090-cc2aabc186b2)
-![res2 op](https://github.com/user-attachments/assets/0079e951-9f23-4188-92dd-9a6d737b20a6)
+![json op](https://github.com/user-attachments/assets/05358699-b859-4d36-9785-6729a295adc0)
+
+![review table final](https://github.com/user-attachments/assets/eeb960f0-aec3-466b-9b8b-697ba34cccba)
+
 
