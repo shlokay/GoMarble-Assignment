@@ -64,7 +64,11 @@ Input page:
 Result page:
 ![json](https://github.com/user-attachments/assets/6a968ae0-fb61-409a-bd07-d98c3ea880d9)
 
+DEMO:
 
-![review table final](https://github.com/user-attachments/assets/eeb960f0-aec3-466b-9b8b-697ba34cccba)
+
+https://github.com/user-attachments/assets/05be260b-6745-47b5-8fd8-391e35fe3225
+
+
 
 
